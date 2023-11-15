@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charsewt="UTF-8">
+		<title>ciao</title>
+		<script>
+"use strict";
+
+let httpRequest;
+
+function successoQualcosa(){
+	if (httpRequest.readyState === XMLHttpRequest.DONE) {    
+		if(httpRequest.status == 200){
+			let elencoMisure = JSON.parse(httpRequest.responseText);
+			elencoMisure = elencoMisure.reverse();
+		
+			grafico.innerHTML="";
+			elencoMisure.forEach( e => {
+				let n = document.createElement("div");
+				n.style.height = (Number(e.potenza)*5)+"px";
+				n.innerText = e.potenza;
+				grafico.appendChild(n);
+				console.log(e);
+			});
+    	}else{
+      		document.getElementById("risposta").innerHTML = "errore "+httpRequest.status;
+    	}
+  	}
+}
+
+function aggiornaGrafico(){
+	  httpRequest = new XMLHttpRequest();
+	  httpRequest.onreadystatechange = successoQualcosa;
+	  httpRequest.open('GET', '/20');
+	  httpRequest.send();
+}
+
+function avviaPagina(){
+	let intervalli = window.setInterval(aggiornaGrafico, 500);
+	aggiornaGrafico();
+}
+		</script>
+		<style>
+			div { border:1px solid purple; display: flex; flex-direction: row;
+			align-items: flex-end; height:550px}
+			div > div { width: 1.2em; background-color: blue;}
+		</style>
+	</head>
+	<body onload="avviaPagina()">
+		<h1 id="risposta">ciao</h1>
+		<div id="grafico"></div>
+	</body>
+</html>
