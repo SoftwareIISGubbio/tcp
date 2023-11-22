@@ -20,17 +20,21 @@ public class Misura {
     Integer id;
     @CreationTimestamp
     LocalDateTime ts;
+    String fornitore;
 	double tensione;
     double corrente;
     double potenza;
+    double rpm;
     
     public Misura() {}
-    
-    public Misura(double tensione, double corrente, double potenza) {
+
+	public Misura(String fornitore, double tensione, double corrente, double potenza, double rpm) {
 		super();
+		this.fornitore = fornitore;
 		this.tensione = tensione;
 		this.corrente = corrente;
 		this.potenza = potenza;
+		this.rpm = rpm;
 	}
 
 	public Integer getId() {
@@ -47,6 +51,14 @@ public class Misura {
 
 	public void setTs(LocalDateTime ts) {
 		this.ts = ts;
+	}
+	
+	public String getFornitore() {
+		return fornitore;
+	}
+
+	public void setFornitore(String fornitore) {
+		this.fornitore = fornitore;
 	}
 
 	public double getTensione() {
@@ -71,6 +83,14 @@ public class Misura {
 
 	public void setPotenza(double potenza) {
 		this.potenza = potenza;
+	}
+	
+	public double getRpm() {
+		return rpm;
+	}
+
+	public void setRpm(double rpm) {
+		this.rpm = rpm;
 	}
     
 }

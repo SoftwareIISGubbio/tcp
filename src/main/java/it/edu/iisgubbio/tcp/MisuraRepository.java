@@ -12,6 +12,12 @@ public interface MisuraRepository extends JpaRepository<Misura, Integer>{
        nativeQuery=true)
     List<Misura> ultimi20();
     
+    @Query(value="SELECT misura.* "+
+            "FROM misura "+
+            "ORDER BY ts DESC LIMIT 1", 
+       nativeQuery=true)
+    List<Misura> ultimo();
+    
     /*
      http://www.h2database.com/html/functions.html
      

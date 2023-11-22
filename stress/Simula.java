@@ -4,18 +4,17 @@ import java.net.URL;
 
 public class Carica {
 	
-	public static void main(String args[]) throws IOException {
+	public static void main(String args[]) throws Exception {
 		
-	    for(int i=0;i<1000000;i++){
+	    for(int i=0;i<36000;i++){
 	    	int t = 20+(int)(Math.random()*40);
 		    int p = 40+(int)(Math.random()*60);
 		    int c = (int)(Math.random()*10);
 		    int r = 100+(int)(Math.random()*100);
 		    String URL = "http://localhost:8008/ins?t="+t+"+&p="+p+"&c="+c+"&r="+r+"&f=simulatore";
-		    if ( i%1000==0 ) {
-		        System.out.println(i);
-		    }
+		    System.out.println(URL);
 		    sendGET(URL);
+		    Thread.sleep(1000);
 	    }
 	}
 	

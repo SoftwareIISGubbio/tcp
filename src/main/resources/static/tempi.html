@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charsewt="UTF-8">
+		<title>ciao</title>
+		<script>
+"use strict";
+
+let httpRequest;
+
+function successoQualcosa(){
+	if (httpRequest.readyState === XMLHttpRequest.DONE) {    
+		if(httpRequest.status == 200){
+			let misura = JSON.parse(httpRequest.responseText);
+			let ultimo = new Date(misura.ts);
+			let adesso = new Date();
+			let secondi = (adesso.valueOf()-ultimo.valueOf())/1000;
+			risposta.innerText = `secondi da ultima modifica: ${secondi}`
+			console.log(secondi);
+    	}else{
+      		document.getElementById("risposta").innerHTML = "errore "+httpRequest.status;
+    	}
+  	}
+}
+
+function avviaPagina(){
+	  httpRequest = new XMLHttpRequest();
+	  httpRequest.onreadystatechange = successoQualcosa;
+	  httpRequest.open('GET', '/statistiche/ultimo');
+	  httpRequest.send();
+}
+
+		</script>
+	</head>
+	<body onload="avviaPagina()">
+		<h1>Tempo trascorso da ultima misura</h1>
+		<p id="risposta">ciao</p>
+	</body>
+</html>

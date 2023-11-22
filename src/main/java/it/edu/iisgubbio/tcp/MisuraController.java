@@ -13,11 +13,12 @@ public class MisuraController {
     @Autowired
     MisuraRepository repoMisura;
 
+    /* insensato
     @GetMapping("/misura")
     public List<Misura> elenco() {
         List<Misura> k = repoMisura.findAll();
         return k;
-    }
+    }*/
     
     @GetMapping("/20")
     public List<Misura> ultimi20() {
@@ -25,13 +26,15 @@ public class MisuraController {
         return k;
     }
 
-    @GetMapping("/ins") // sarebbe un POST ma mi sa che i dati li inviano così
+    @GetMapping("/ins") // sarebbe un POST ma mi sa che i dati son comodi da ricevere così
     public void cerca(
-        @RequestParam(required = true) double t,
-        @RequestParam(required = true) double c,
-        @RequestParam(required = true) double p
+        @RequestParam(required = true) double t, // tensione
+        @RequestParam(required = true) double c, // corrente
+        @RequestParam(required = true) double p, // potenza
+        @RequestParam(required = false) double r,// rpm
+        @RequestParam(required = false) String f // fornitore
     ) {
-        Misura m = new Misura(t,c,p);
+        Misura m = new Misura(f,t,c,p,r);
         repoMisura.save(m);
     }
 
