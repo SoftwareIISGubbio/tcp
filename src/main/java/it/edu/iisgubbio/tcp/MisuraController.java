@@ -27,7 +27,7 @@ public class MisuraController {
     }
 
     @GetMapping("/ins") // sarebbe un POST ma mi sa che i dati son comodi da ricevere così
-    public void cerca(
+    public String cerca(
         @RequestParam(required = true) double t, // tensione
         @RequestParam(required = true) double c, // corrente
         @RequestParam(required = true) double p, // potenza
@@ -36,6 +36,7 @@ public class MisuraController {
     ) {
         Misura m = new Misura(f,t,c,p,r);
         repoMisura.save(m);
+        return "ok";
     }
 
 }
