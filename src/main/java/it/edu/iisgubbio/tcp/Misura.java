@@ -21,10 +21,10 @@ public class Misura {
     @CreationTimestamp
     LocalDateTime ts;
     String fornitore;
-	double tensione;
-    double corrente;
-    double potenza;
-    double rpm;
+	Double tensione;
+    Double corrente;
+    Double potenza;
+    Double rpm;
     
     public Misura() {}
 
@@ -86,6 +86,8 @@ public class Misura {
 	}
 	
 	public double getRpm() {
+		if(rpm==null)
+			return 0;
 		return rpm;
 	}
 
