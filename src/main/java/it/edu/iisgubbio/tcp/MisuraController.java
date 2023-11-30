@@ -1,8 +1,11 @@
 package it.edu.iisgubbio.tcp;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,14 +16,8 @@ public class MisuraController {
 
     @Autowired
     MisuraRepository repoMisura;
-
-    /* insensato
-    @GetMapping("/misura")
-    public List<Misura> elenco() {
-        List<Misura> k = repoMisura.findAll();
-        return k;
-    }*/
     
+    @CrossOrigin
     @GetMapping("/20")
     public List<Misura> ultimi20() {
         List<Misura> k = repoMisura.ultimi20();
@@ -35,14 +32,19 @@ public class MisuraController {
         @RequestParam(required = false) Double r,// rpm
         @RequestParam(required = false) String f // fornitore
     ) {
-    	// https://www.baeldung.com/rest-template
-    	RestTemplate restTemplate = new RestTemplate();
-    	String uri = "http://kili.aspix.it:8008/ins?t="+t+"+&p="+p+"&c="+c+"&f=simulatore"; // or any other uri
-    	if(r!=null) {
-    		uri += "&r="+r.doubleValue();
+    	if(Stato.talos) {
+    		try {
+	    		// https://www.baeldung.com/rest-template
+	    		RestTemplate restTemplate = new RestTemplate();
+	    		String uri = "http://kili.aspix.it:8008/ins?t="+t+"+&p="+p+"&c="+c+"&f=simulatore"; // or any other uri
+	    		if(r!=null) {
+	    			uri += "&r="+r.doubleValue();
+	    		}
+	    		restTemplate.getForEntity(uri, String.class);
+    		}catch(Exception x) {
+    			; // pazienza
+    		}
     	}
-    	restTemplate.getForEntity(uri, String.class);
-        
         Misura m = new Misura(f,t,c,p,r);
         repoMisura.save(m);
         return "ok";

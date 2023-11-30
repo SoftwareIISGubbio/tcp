@@ -8,9 +8,6 @@
 
 let httpRequest;
 
-let cosa="corrente";
-let zoom=20;
-
 function successoQualcosa(){
 	if (httpRequest.readyState === XMLHttpRequest.DONE) {    
 		if(httpRequest.status == 200){
@@ -20,8 +17,8 @@ function successoQualcosa(){
 			grafico.innerHTML="";
 			elencoMisure.forEach( e => {
 				let n = document.createElement("div");
-				n.style.height = (Number(e[cosa])*zoom)+"px";
-				n.innerText = e[cosa];
+				n.style.height = (Number(e.corrente)*40)+"px";
+				n.innerText = e.corrente;
 				grafico.appendChild(n);
 				console.log(e);
 			});
@@ -31,27 +28,21 @@ function successoQualcosa(){
   	}
 }
 
-function aggiornaGrafico(){
+function avviaPagina(){
 	  httpRequest = new XMLHttpRequest();
 	  httpRequest.onreadystatechange = successoQualcosa;
-	  httpRequest.open('GET', '/20');
+	  httpRequest.open('GET', 'statistiche/giornata?giorno=2023-11-09');
 	  httpRequest.send();
-}
-
-function avviaPagina(){
-	let intervalli = window.setInterval(aggiornaGrafico, 500);
-	aggiornaGrafico();
 }
 		</script>
 		<style>
 			div { border:1px solid purple; display: flex; flex-direction: row;
 			align-items: flex-end; height:550px}
-			div > div { width: 1.5rem; background-color: rgb(122, 193, 244);
-			overflow:hidden; font-size:0.7rem}
+			div > div { width: 1.2em; background-color: blue;}
 		</style>
 	</head>
 	<body onload="avviaPagina()">
-		<h1 id="risposta">ciao</h1>
+		<h1 id="risposta">stic capo!</h1>
 		<div id="grafico"></div>
 	</body>
 </html>
