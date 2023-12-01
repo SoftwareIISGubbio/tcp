@@ -1,34 +1,40 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charsewt="UTF-8">
-		<title>IOT monitor</title>
-		<style>
-			menu { background-color: rgb(202, 0, 203) ; border-radius: 0.5rem; padding:1rem}
-			canvas { border: 1px solid black }
-		</style>
-	</head>
-	<body onload="avvia()">
-		<menu>
-			<select id="cosaVoglio">
-				<option value="20" selected="selected">ultimi 20</option>
-				<option value="storico">storico</option>
-			</select>
-			<input type="text" id="giorno" value="2023-11-09">
-			<input type="checkbox" id="live" value="live" checked>live
-			<button type="button" style="float:right" onclick="avvia()">aggiorna</button>
-		</menu>
-		<canvas id="myCanvas" width="650" height="450" style="border:1px solid #000000;">
-		</canvas> 
-		<img src="qr.png" style="width:10rem">
-	</body>
-<script>
+  <head>
+	<meta charsewt="UTF-8">
+  	<title>IOT monitor</title>
+  	<style>
+      menu { background-color: rgb(202, 0, 203) ; border-radius: 0.5rem; padding:1rem}
+      #tela { border: 1px solid black }
+  	</style>
+  </head>
+  <body onload="avvia()">
+	<menu>
+	  <select id="cosaVoglio">
+		<option value="20" selected="selected">ultimi 20</option>
+		<option value="storico">storico</option>
+	  </select>
+	  <input type="text" id="giorno" value="2023-11-09">
+	  <input type="checkbox" id="live" value="live" checked>live
+	  <button type="button" style="float:right" onclick="avvia()">aggiorna</button>
+    </menu>
+	<div>
+	  <canvas id="tela" width="650" height="450"></canvas> 
+	  <img src="qr.png" style="width:10rem">
+	</div>
+	<div id="risposta"></div>
+  </body>
+  <script>
 "use strict";
 
-let httpRequest;
-let canvas = document.getElementById("myCanvas");
-let ctx = canvas.getContext("2d");
-ctx.textAlign = "center";
+let richiestaAlServer;
+let disegno = tela.getContext("2d");
+disegno.textAlign = "center";
+
+let orologio = new Intl.DateTimeFormat('it-IT',{
+  dateStyle: 'full',
+  timeStyle: 'long'
+});
 
 /* solare corrente con max 400 */
 /* tensione eolico con max 5 */
@@ -41,72 +47,76 @@ let server = "http://kili.aspix.it:8008";
 let indirizzoDati="/20";
 
 function avvia(){
-	clearInterval(timer);
-	console.log();
-	if(cosaVoglio.value=="storico"){
-		indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value; // 2023-11-09
-	}else{
-		indirizzoDati = server+"/20";
-	}
-	if(live.checked){
-		timer = window.setInterval(aggiornaGrafico, 500);	
-	} else {
-		aggiornaGrafico();	
-	}
+  clearInterval(timer);
+  if(cosaVoglio.value=="storico"){
+    indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value; // 2023-11-09
+  }else{
+    indirizzoDati = server+"/20";
+  }
+  if(live.checked){
+	timer = window.setInterval(aggiornaGrafico, 1000);	
+  }else{
+    aggiornaGrafico();	
+  }
 }
 
 function successoQualcosa(){
-	if (httpRequest.readyState === XMLHttpRequest.DONE) {    
-		if(httpRequest.status == 200){
+  if (richiestaAlServer.readyState === XMLHttpRequest.DONE) {    
+    if(richiestaAlServer.status == 200){
+      let elencoMisure = JSON.parse(richiestaAlServer.responseText);
+	  elencoMisure = elencoMisure.reverse();
+	
+	  // pulisco la tela		
+	  disegno.fillStyle = "#000000";
+      disegno.clearRect(0, 0, tela.width, tela.height)
+      disegno.beginPath();
+	  disegno.moveTo(20, 400);
+	  disegno.lineTo(640, 400);
+	  disegno.stroke();
 			
-			let elencoMisure = JSON.parse(httpRequest.responseText);
-			elencoMisure = elencoMisure.reverse();
-			
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			ctx.beginPath();
-			ctx.moveTo(20, 400);
-			ctx.lineTo(640, 400);
-			ctx.stroke();
-			ctx.fillText("tempo "+elencoMisure[19]["ts"], 400, 420);
-			
-			// traccio i valori delle ordinate
-			for(let t=1;t<=10;t++){
-				ctx.beginPath();
-				ctx.moveTo(0, 400-(altezza/10*t));
-				ctx.lineTo(20, 400-(altezza/10*t));
-				ctx.closePath();
-				ctx.fillText(t*10+"%", 20, 400-(altezza/10*t));
-			}
-
-			ctx.fillStyle = "#ff0000";
-			ctx.beginPath();
-			
-			for(let i=0 ; i<20 ; i++){
+	  if(elencoMisure.length<20){ // troppi pochi dati, qualcosa non va
+	    disegno.fillText("dati insufficienti", 400, 200);
+      }else{			
+		let ultimoTempo = new Date(elencoMisure[19]["ts"]);
+        disegno.fillText(orologio.format(ultimoTempo), 300, 420);
 				
-				let dato = Number(elencoMisure[i][cosa]);
-				let val = (dato/max)*altezza;
-				// console.log(e);
-				if(i==0){
-					ctx.moveTo(ampiezza*(i+2), 400-val);
-				} else {
-					ctx.lineTo(ampiezza*(i+2), 400-val);
-				}
-				let etichetta = dato.toString().substring(0,4)
-				ctx.fillText(etichetta, ampiezza*(i+2), 400-val-10);
-			}
-
-			ctx.stroke();
-    	}else{
-      		document.getElementById("risposta").innerHTML = "errore "+httpRequest.status;
-    	}
-  	}
+		// traccio i valori delle ordinate
+		for(let t=1;t<=10;t++){
+		  disegno.beginPath();
+		  disegno.moveTo(0, 400-(altezza/10*t));
+		  disegno.lineTo(20, 400-(altezza/10*t));
+          disegno.closePath();
+          disegno.fillText(t*10+"%", 20, 400-(altezza/10*t));
+        }
+	
+		// disegno il grafico
+		disegno.fillStyle = "#ff0000";
+		disegno.beginPath();
+				
+		for(let i=0 ; i<elencoMisure.length ; i++){
+		  let dato = Number(elencoMisure[i][cosa]);
+		  let val = (dato/max)*altezza;
+		  if(i==0){
+            disegno.moveTo(ampiezza*(i+2), 400-val);
+          } else {
+            disegno.lineTo(ampiezza*(i+2), 400-val);
+          }
+          let etichetta = dato.toString().substring(0,4)
+          disegno.fillText(etichetta, ampiezza*(i+2), 400-val-10);
+        }
+      }
+	  disegno.stroke();
+    }else{
+      document.getElementById("risposta").innerHTML = "errore "+richiestaAlServer.status;
+    }
+  }
 }
 
 function aggiornaGrafico(){
-	  httpRequest = new XMLHttpRequest();
-	  httpRequest.onreadystatechange = successoQualcosa;
-	  httpRequest.open('GET', indirizzoDati);
-	  httpRequest.send();
+  richiestaAlServer = new XMLHttpRequest();
+  richiestaAlServer.onreadystatechange = successoQualcosa;
+  richiestaAlServer.open('GET', indirizzoDati);
+  richiestaAlServer.send();
 }
-		</script>
+</script>
 </html>

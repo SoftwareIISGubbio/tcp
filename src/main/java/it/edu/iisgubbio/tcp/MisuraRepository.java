@@ -10,6 +10,7 @@ public interface MisuraRepository extends JpaRepository<Misura, Integer>{
 
 	@Query(value="SELECT misura.* "+
             "FROM misura "+
+            "WHERE ts>DATEADD(HOUR, -1, CURRENT_TIMESTAMP()) "+
             "ORDER BY ts DESC LIMIT 20", 
        nativeQuery=true)
     List<Misura> ultimi20();
