@@ -2,29 +2,97 @@
 <html>
 	<head>
 		<meta charsewt="UTF-8">
-		<title>ciao</title>
-		<script>
+		<title>IOT monitor</title>
+		<style>
+			menu { background-color: rgb(202, 0, 203) ; border-radius: 0.5rem; padding:1rem}
+			canvas { border: 1px solid black }
+		</style>
+	</head>
+	<body>
+		<menu>
+			<select id="cosaVoglio">
+				<option value="20">ultimi 20</option>
+				<option value="storico">storico</option>
+			</select>
+			<input type="text" id="giorno">
+			<input type="checkbox" id="live" value="live">live
+			<button type="button" style="float:right" onclick="avvia()">aggiorna</button>
+		</menu>
+		<canvas id="myCanvas" width="650" height="450" style="border:1px solid #000000;">
+		</canvas> 
+	</body>
+			<script>
 "use strict";
 
 let httpRequest;
+let canvas = document.getElementById("myCanvas");
+let ctx = canvas.getContext("2d");
+ctx.textAlign = "center";
 
 let cosa="corrente";
-let zoom=20;
+let altezza=300;
+let ampiezza=30;
+let max = 5;
+let timer = window.setTimeout(null,1);
+let server = "http://kili.aspix.it:8008";
+let indirizzoDati="/20";
+
+function avvia(){
+	clearInterval(timer);
+	console.log();
+	if(cosaVoglio.value=="storico"){
+		indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value; // 2023-11-09
+	}else{
+		indirizzoDati = server+"/20";
+	}
+	if(live.checked){
+		timer = window.setInterval(aggiornaGrafico, 500);	
+	} else {
+		aggiornaGrafico();	
+	}
+}
 
 function successoQualcosa(){
 	if (httpRequest.readyState === XMLHttpRequest.DONE) {    
 		if(httpRequest.status == 200){
+			
 			let elencoMisure = JSON.parse(httpRequest.responseText);
 			elencoMisure = elencoMisure.reverse();
-		
-			grafico.innerHTML="";
-			elencoMisure.forEach( e => {
-				let n = document.createElement("div");
-				n.style.height = (Number(e[cosa])*zoom)+"px";
-				n.innerText = e[cosa];
-				grafico.appendChild(n);
-				console.log(e);
-			});
+			
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.beginPath();
+			ctx.moveTo(20, 400);
+			ctx.lineTo(640, 400);
+			ctx.stroke();
+			ctx.fillText("tempo "+elencoMisure[19]["ts"], 400, 420);
+			
+			// traccio i valori delle ordinate
+			for(let t=1;t<=10;t++){
+				ctx.beginPath();
+				ctx.moveTo(0, 400-(altezza/10*t));
+				ctx.lineTo(20, 400-(altezza/10*t));
+				ctx.closePath();
+				ctx.fillText(t*10+"%", 20, 400-(altezza/10*t));
+			}
+
+			ctx.fillStyle = "#ff0000";
+			ctx.beginPath();
+			
+			for(let i=0 ; i<20 ; i++){
+				
+				let dato = Number(elencoMisure[i][cosa]);
+				let val = (dato/max)*altezza;
+				// console.log(e);
+				if(i==0){
+					ctx.moveTo(ampiezza*(i+2), 400-val);
+				} else {
+					ctx.lineTo(ampiezza*(i+2), 400-val);
+				}
+				let etichetta = dato.toString().substring(0,4)
+				ctx.fillText(etichetta, ampiezza*(i+2), 400-val-10);
+			}
+
+			ctx.stroke();
     	}else{
       		document.getElementById("risposta").innerHTML = "errore "+httpRequest.status;
     	}
@@ -34,24 +102,8 @@ function successoQualcosa(){
 function aggiornaGrafico(){
 	  httpRequest = new XMLHttpRequest();
 	  httpRequest.onreadystatechange = successoQualcosa;
-	  httpRequest.open('GET', '/20');
+	  httpRequest.open('GET', indirizzoDati);
 	  httpRequest.send();
 }
-
-function avviaPagina(){
-	let intervalli = window.setInterval(aggiornaGrafico, 500);
-	aggiornaGrafico();
-}
 		</script>
-		<style>
-			div { border:1px solid purple; display: flex; flex-direction: row;
-			align-items: flex-end; height:550px}
-			div > div { width: 1.5rem; background-color: rgb(122, 193, 244);
-			overflow:hidden; font-size:0.7rem}
-		</style>
-	</head>
-	<body onload="avviaPagina()">
-		<h1 id="risposta">ciao</h1>
-		<div id="grafico"></div>
-	</body>
 </html>
