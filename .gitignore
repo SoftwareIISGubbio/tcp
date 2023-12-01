@@ -34,3 +34,4 @@ build/
 
 # Edoardo
 .pydevproject
+.DS_Store
