@@ -8,20 +8,21 @@
 			canvas { border: 1px solid black }
 		</style>
 	</head>
-	<body>
+	<body onload="avvia()">
 		<menu>
 			<select id="cosaVoglio">
-				<option value="20">ultimi 20</option>
+				<option value="20" selected="selected">ultimi 20</option>
 				<option value="storico">storico</option>
 			</select>
-			<input type="text" id="giorno">
-			<input type="checkbox" id="live" value="live">live
+			<input type="text" id="giorno" value="2023-11-09">
+			<input type="checkbox" id="live" value="live" checked>live
 			<button type="button" style="float:right" onclick="avvia()">aggiorna</button>
 		</menu>
 		<canvas id="myCanvas" width="650" height="450" style="border:1px solid #000000;">
 		</canvas> 
+		<img src="qr.png" style="width:10rem">
 	</body>
-			<script>
+<script>
 "use strict";
 
 let httpRequest;
@@ -29,10 +30,12 @@ let canvas = document.getElementById("myCanvas");
 let ctx = canvas.getContext("2d");
 ctx.textAlign = "center";
 
-let cosa="corrente";
+/* solare corrente con max 400 */
+/* tensione eolico con max 5 */
+let cosa="tensione";
 let altezza=300;
 let ampiezza=30;
-let max = 5;
+let max = 5; 
 let timer = window.setTimeout(null,1);
 let server = "http://kili.aspix.it:8008";
 let indirizzoDati="/20";

@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface MisuraRepository extends JpaRepository<Misura, Integer>{
-    @Query(value="SELECT misura.* "+
+
+	@Query(value="SELECT misura.* "+
             "FROM misura "+
             "ORDER BY ts DESC LIMIT 20", 
        nativeQuery=true)

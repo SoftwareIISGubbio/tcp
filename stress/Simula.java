@@ -9,7 +9,7 @@ public class Carica {
 	    for(int i=0;i<36000;i++){
 	    	int t = 20+(int)(Math.random()*40);
 		    int p = 40+(int)(Math.random()*60);
-		    int c = (int)(Math.random()*10);
+		    double c = (Math.random()*5);
 		    int r = 100+(int)(Math.random()*100);
 		    String URL = "http://localhost:8008/ins?t="+t+"+&p="+p+"&c="+c+"&r="+r+"&f=simulatore";
 		    System.out.println(URL);

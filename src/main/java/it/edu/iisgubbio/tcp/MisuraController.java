@@ -1,7 +1,5 @@
 package it.edu.iisgubbio.tcp;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +34,7 @@ public class MisuraController {
     		try {
 	    		// https://www.baeldung.com/rest-template
 	    		RestTemplate restTemplate = new RestTemplate();
-	    		String uri = "http://kili.aspix.it:8008/ins?t="+t+"+&p="+p+"&c="+c+"&f=simulatore"; // or any other uri
+	    		String uri = "http://kili.aspix.it:8008/ins?t="+t+"+&p="+p+"&c="+c+"&f="+f; // or any other uri
 	    		if(r!=null) {
 	    			uri += "&r="+r.doubleValue();
 	    		}

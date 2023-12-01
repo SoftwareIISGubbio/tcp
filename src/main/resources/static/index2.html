@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charsewt="UTF-8">
+		<title>ciao</title>
+		<script>
+"use strict";
+
+let httpRequest;
+
+let cosa="corrente";
+let zoom=50;
+
+function successoQualcosa(){
+	if (httpRequest.readyState === XMLHttpRequest.DONE) {    
+		if(httpRequest.status == 200){
+			let elencoMisure = JSON.parse(httpRequest.responseText);
+			elencoMisure = elencoMisure.reverse();
+			
+			let c = document.getElementById("myCanvas");
+			let ctx = c.getContext("2d");
+			
+			grafico.innerHTML="";
+			let i = 2;
+			
+			for(let t=1;t<=10;t++){
+				ctx.moveTo(0, 400-(t*zoom));
+				ctx.lineTo(20, 400-(t*zoom));
+				ctx.stroke();
+			}
+			
+			elencoMisure.forEach( e => {
+				let n = document.createElement("div");
+				let val = (Number(e[cosa]) *zoom);
+				n.style.height = val+"px";
+				n.innerText = e[cosa];
+				grafico.appendChild(n);
+				console.log(e);
+				if(i==2){
+					ctx.moveTo(20*(i+1), 400-val);
+				}
+				i++;
+				ctx.lineTo(20*(i+1), 400-val);
+				ctx.stroke();
+			});
+    	}else{
+      		document.getElementById("risposta").innerHTML = "errore "+httpRequest.status;
+    	}
+  	}
+}
+
+function aggiornaGrafico(){
+	  httpRequest = new XMLHttpRequest();
+	  httpRequest.onreadystatechange = successoQualcosa;
+	  httpRequest.open('GET', '/20');
+	  httpRequest.send();
+}
+
+function avviaPagina(){
+	let intervalli = window.setInterval(aggiornaGrafico, 500);
+	aggiornaGrafico();
+}
+		</script>
+		<style>
+			menu { background-color: aquamarine ; border-radius: 0.5rem; padding:1rem}
+			
+			div { border:1px solid purple; display: flex; flex-direction: row;
+			align-items: flex-end; height:550px}
+			div > div { width: 1.5rem; background-color: rgb(122, 193, 244);
+			overflow:hidden; font-size:0.7rem}
+			canvas { border: 1px solid black }
+		</style>
+	</head>
+	<body onload="avviaPagina()">
+		<menu>
+			<select>
+				<option value="20">ultimi 20</option>
+				<option value="storico">storico</option>
+			</select>
+			<input type="text" id="pippo">
+		</menu>
+		<div id="grafico"></div>
+		<canvas id="myCanvas" width="600" height="400" style="border:1px solid #000000;">
+		</canvas> 
+	</body>
+</html>
