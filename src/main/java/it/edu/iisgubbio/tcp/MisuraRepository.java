@@ -41,8 +41,24 @@ public interface MisuraRepository extends JpaRepository<Misura, Integer>{
        nativeQuery=true)
     List<Misura> giornata(@Param("data") String data);
     
+    @Query(value="SELECT 0 id, "+
+        "PERCENTILE_DISC(0.99999) WITHIN GROUP (ORDER BY corrente) as corrente, "+ //max non è significativo, becca anche dei numeri sballati
+        "PERCENTILE_DISC(0.99999) WITHIN GROUP (ORDER BY tensione) as tensione, "+
+        "PERCENTILE_DISC(0.99999) WITHIN GROUP (ORDER BY potenza) as potenza, "+
+        "0 as rpm, "+
+        "max(ts) as ts, "+
+        "'stat' as fornitore"+
+        " FROM misura",
+       nativeQuery=true)
+    Misura max(); // FIXME: servirebbe come parametro l'id del dispositivo
+    
     /*
      http://www.h2database.com/html/functions.html
+     
+     select PERCENTILE_DISC(0.99999) WITHIN GROUP (ORDER BY corrente),
+PERCENTILE_DISC(0.99999) WITHIN GROUP (ORDER BY tensione),
+max(corrente)
+ FROM misura
      
      
 SELECT  * from misura WHERE ts>DATEADD(SECOND, -1, CURRENT_TIMESTAMP()) 

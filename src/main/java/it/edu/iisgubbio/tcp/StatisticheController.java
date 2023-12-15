@@ -37,6 +37,12 @@ public class StatisticheController {
     }
     
     @CrossOrigin
+    @GetMapping("/statistiche/max")
+    public Misura max() {
+      return repoMisura.max();
+    }
+    
+    @CrossOrigin
     @GetMapping("/statistiche/giorno")
     public List<Misura> giorno(@RequestParam(required = true) String data) {
         List<Misura> k = repoMisura.giornata(data);

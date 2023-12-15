@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html>
   <head>
-	<meta charsewt="UTF-8">
+	<meta charset="UTF-8">
   	<title>IOT monitor</title>
   	<style>
       body {background-color: #EECD00}
-      menu { background-color:#eeeeee; border-radius: 0.5rem; padding:1rem}
+      header { background-color:#eeeeee; border-radius: 0.5rem; padding:1rem; margin-bottom:1rem}
       #tela { border: 1px solid black }
+      #stato { position:fixed; bottom:0 ; left:0; background: rgb(58, 141, 39) ; color:white; width:100%; text-align: center; font-size: 0.75rem ; padding:0.2rem}
   	</style>
   </head>
   <body onload="avvia()">
-	<menu>
+	<header>
 	  <img src="iiscg.png" style="height:1.5rem; padding-right: 2rem ;">
+	  <select id="parametro">
+		<option value="corrente" selected="selected">corrente</option>
+		<option value="tensione">tensione</option>
+	  </select>
 	  <select id="cosaVoglio">
 		<option value="20" selected="selected">ultimi 20</option>
 		<option value="storico">storico</option>
@@ -19,12 +24,13 @@
 	  <input type="text" id="giorno" value="2023-11-09">
 	  <input type="checkbox" id="live" value="live" checked>live
 	  <button type="button" style="float:right" onclick="avvia()">aggiorna</button>
-    </menu>
+    </header>
 	<div>
 	  <canvas id="tela" width="650" height="450"></canvas> 
 	  <img src="qr.png" style="width:10rem">
 	</div>
 	<div id="risposta"></div>
+	<div id="stato">?</div>
   </body>
   <script>
 "use strict";
@@ -40,16 +46,30 @@ let orologio = new Intl.DateTimeFormat('it-IT',{
 
 /* solare corrente con max 400 */
 /* tensione eolico con max 5 */
-let cosa="tensione";
+let cosa;
 let altezza=300;
 let ampiezza=30;
-let max = 5; 
+let max=100; // viene recuperato dal server al cambio di grafico
 let timer = window.setTimeout(null,1);
 let server = "http://kili.aspix.it:8008";
 let indirizzoDati="/20";
 
+async function beccaMassimo() {
+  const response = await fetch(server+"/statistiche/max");
+  const massimi = await response.json();
+  max = massimi[cosa];
+  stato.innerText += " [max:"+max+"]";
+}
+
 function avvia(){
   clearInterval(timer);
+  cosa = parametro.value;
+  /*if(cosa=="corrente"){
+	  max = 400;
+  } else {
+	  max = 5;
+  }*/
+  beccaMassimo();
   if(cosaVoglio.value=="storico"){
     indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value; // 2023-11-09
   }else{
@@ -60,6 +80,7 @@ function avvia(){
   }else{
     aggiornaGrafico();	
   }
+  stato.innerText = cosa;
 }
 
 function successoQualcosa(){
