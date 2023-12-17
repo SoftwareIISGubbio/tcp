@@ -10,7 +10,7 @@
       #stato { position:fixed; bottom:0 ; left:0; background: rgb(58, 141, 39) ; color:white; width:100%; text-align: center; font-size: 0.75rem ; padding:0.2rem}
   	</style>
   </head>
-  <body onload="avvia()">
+  <body onload="disegnaNuovoGrafico()">
 	<header>
 	  <img src="iiscg.png" style="height:1.5rem; padding-right: 2rem ;">
 	  <select id="parametro">
@@ -23,7 +23,7 @@
 	  </select>
 	  <input type="text" id="giorno" value="2023-11-09">
 	  <input type="checkbox" id="live" value="live" checked>live
-	  <button type="button" style="float:right" onclick="avvia()">aggiorna</button>
+	  <button type="button" style="float:right" onclick="disegnaNuovoGrafico()">aggiorna</button>
     </header>
 	<div>
 	  <canvas id="tela" width="650" height="450"></canvas> 
@@ -34,112 +34,122 @@
   </body>
   <script>
 "use strict";
-
-let richiestaAlServer;
+// ---------- area di plot ----------
 let disegno = tela.getContext("2d");
 disegno.textAlign = "center";
-
-let orologio = new Intl.DateTimeFormat('it-IT',{
-  dateStyle: 'full',
-  timeStyle: 'long'
-});
-
-/* solare corrente con max 400 */
-/* tensione eolico con max 5 */
-let cosa;
-let altezza=300;
-let ampiezza=30;
-let max=100; // viene recuperato dal server al cambio di grafico
-let timer = window.setTimeout(null,1);
+let altezza = 300;
+let ampiezza = 30;
+let orologio = new Intl.DateTimeFormat('it-IT',{ dateStyle: 'full', timeStyle: 'long' });
+// ---------- connessione ----------
+// let server = "http://kili.aspix.it:8008/pippo";
 let server = "http://kili.aspix.it:8008";
-let indirizzoDati="/20";
+let indirizzoDati = "/20";
+// ---------- dati ----------
+let datoDaVisualizzare;
+let massimoDiCosa = "?";
+let max = -1; // viene recuperato dal server al cambio di grafico, la corrente arriva max circa 500, la tensione max 5
 
-async function beccaMassimo() {
+let timer = window.setTimeout(null,1);
+
+/************************************************************************************************
+ * Recupera le informazioni sul massimo di una determinata misura usando Fetch API
+ è ottimista: nessuna gestione dell'errore
+ ***********************************************************************************************/
+async function recuperaMassimo() {
+  console.log("chiedo il massimo");
   const response = await fetch(server+"/statistiche/max");
   const massimi = await response.json();
-  max = massimi[cosa];
-  stato.innerText += " [max:"+max+"]";
+  max = massimi[datoDaVisualizzare];
+  stato.innerText += " {max:"+max+"}";
 }
 
-function avvia(){
+
+/************************************************************************************************
+ * plotta una serie di dati TODO: l'uso del canvas credo sia da rivedere
+ ***********************************************************************************************/
+function disegnaGrafico(elencoMisure){
+  // pulisco la tela		
+  disegno.fillStyle = "#000000";
+  disegno.clearRect(0, 0, tela.width, tela.height)
+  disegno.beginPath();
+  disegno.moveTo(20, 400);
+  disegno.lineTo(640, 400);
+  disegno.stroke();
+			
+  if(elencoMisure.length<20){ // troppi pochi dati, qualcosa non va
+    disegno.fillText("dati insufficienti", 400, 200);
+  }else{			
+    let ultimoTempo = new Date(elencoMisure[19]["ts"]);
+    disegno.fillText(orologio.format(ultimoTempo), 300, 420);
+				
+    // traccio i valori delle ordinate
+	for(let t=1;t<=10;t++){
+	  disegno.beginPath();
+      disegno.moveTo(0, 400-(altezza/10*t));
+      disegno.lineTo(20, 400-(altezza/10*t));
+      disegno.closePath();
+      disegno.fillText(t*10+"%", 20, 400-(altezza/10*t));
+    }
+	
+    // disegno il grafico
+    disegno.fillStyle = "#ff0000";
+    disegno.beginPath();
+				
+    for(let i=0 ; i<elencoMisure.length ; i++){
+      let dato = Number(elencoMisure[i][datoDaVisualizzare]);
+      let val = (dato/max)*altezza;
+      if(i==0){
+        disegno.moveTo(ampiezza*(i+2), 400-val);
+      } else {
+        disegno.lineTo(ampiezza*(i+2), 400-val);
+      }
+      let etichetta = dato.toString().substring(0,4)
+      disegno.fillText(etichetta, ampiezza*(i+2), 400-val-10);
+    }
+  }
+  disegno.stroke();	
+}
+
+/************************************************************************************************
+ * Riavvia il sistema di visualizzazine con nuovi dati
+ ***********************************************************************************************/
+function disegnaNuovoGrafico(){
   clearInterval(timer);
-  cosa = parametro.value;
-  /*if(cosa=="corrente"){
-	  max = 400;
-  } else {
-	  max = 5;
-  }*/
-  beccaMassimo();
+  datoDaVisualizzare = parametro.value;
   if(cosaVoglio.value=="storico"){
-    indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value; // 2023-11-09
+    indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value;
   }else{
     indirizzoDati = server+"/20";
   }
   if(live.checked){
-	timer = window.setInterval(aggiornaGrafico, 1000);	
+	// timer = window.setInterval(aggiornaGrafico, 1000); XMLHttpRequest
+	timer = window.setInterval(leggiDatiGrafico, 1000);
   }else{
-    aggiornaGrafico();	
+	leggiDatiGrafico();	
   }
-  stato.innerText = cosa;
+  // se ho cambiato dato devo richiedere il massimo
+  if(massimoDiCosa!=datoDaVisualizzare){
+    max = -1;
+    massimoDiCosa = datoDaVisualizzare;
+    stato.innerText = datoDaVisualizzare;
+	recuperaMassimo();
+  }else{
+	stato.innerText = datoDaVisualizzare+" ["+max+"]";  
+  }
 }
 
-function successoQualcosa(){
-  if (richiestaAlServer.readyState === XMLHttpRequest.DONE) {    
-    if(richiestaAlServer.status == 200){
-      let elencoMisure = JSON.parse(richiestaAlServer.responseText);
-	  elencoMisure = elencoMisure.reverse();
-	
-	  // pulisco la tela		
-	  disegno.fillStyle = "#000000";
-      disegno.clearRect(0, 0, tela.width, tela.height)
-      disegno.beginPath();
-	  disegno.moveTo(20, 400);
-	  disegno.lineTo(640, 400);
-	  disegno.stroke();
-			
-	  if(elencoMisure.length<20){ // troppi pochi dati, qualcosa non va
-	    disegno.fillText("dati insufficienti", 400, 200);
-      }else{			
-		let ultimoTempo = new Date(elencoMisure[19]["ts"]);
-        disegno.fillText(orologio.format(ultimoTempo), 300, 420);
-				
-		// traccio i valori delle ordinate
-		for(let t=1;t<=10;t++){
-		  disegno.beginPath();
-		  disegno.moveTo(0, 400-(altezza/10*t));
-		  disegno.lineTo(20, 400-(altezza/10*t));
-          disegno.closePath();
-          disegno.fillText(t*10+"%", 20, 400-(altezza/10*t));
-        }
-	
-		// disegno il grafico
-		disegno.fillStyle = "#ff0000";
-		disegno.beginPath();
-				
-		for(let i=0 ; i<elencoMisure.length ; i++){
-		  let dato = Number(elencoMisure[i][cosa]);
-		  let val = (dato/max)*altezza;
-		  if(i==0){
-            disegno.moveTo(ampiezza*(i+2), 400-val);
-          } else {
-            disegno.lineTo(ampiezza*(i+2), 400-val);
-          }
-          let etichetta = dato.toString().substring(0,4)
-          disegno.fillText(etichetta, ampiezza*(i+2), 400-val-10);
-        }
-      }
-	  disegno.stroke();
+/************************************************************************************************
+ * Chiede i dati al server e li visualizza una volta arrivati (usa Fetch API)
+ ***********************************************************************************************/
+async function leggiDatiGrafico() {
+    const risposta = await fetch(indirizzoDati);
+    if(risposta.ok){
+	    const dati = await risposta.json();
+	    disegnaGrafico( dati.reverse() );
     }else{
-      document.getElementById("risposta").innerHTML = "errore "+richiestaAlServer.status;
+    	document.getElementById("risposta").innerHTML = "errore "+risposta.status;
     }
-  }
 }
 
-function aggiornaGrafico(){
-  richiestaAlServer = new XMLHttpRequest();
-  richiestaAlServer.onreadystatechange = successoQualcosa;
-  richiestaAlServer.open('GET', indirizzoDati);
-  richiestaAlServer.send();
-}
 </script>
 </html>
