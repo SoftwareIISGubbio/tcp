@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/*************************************************************************************************
+ * Le query native sono per H2, in alcuni casi c'è l'equivalente per postgreSQL
+ ************************************************************************************************/
 public interface MisuraRepository extends JpaRepository<Misura, Integer>{
-
 	@Query(value="SELECT misura.* "+
             "FROM misura "+
             "WHERE ts>DATEADD(HOUR, -1, CURRENT_TIMESTAMP()) "+
