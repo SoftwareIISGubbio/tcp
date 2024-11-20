@@ -17,12 +17,6 @@
 		<option value="corrente" selected="selected">corrente</option>
 		<option value="tensione">tensione</option>
 	  </select>
-	  <select id="cosaVoglio">
-		<option value="20" selected="selected">ultimi 20</option>
-		<option value="storico">storico</option>
-	  </select>
-	  <input type="text" id="giorno" value="2023-11-09">
-	  <input type="checkbox" id="live" value="live" checked>live
 	  <button type="button" style="float:right" onclick="disegnaNuovoGrafico()">aggiorna</button>
     </header>
 	<div>
@@ -52,8 +46,7 @@ let max = -1; // viene recuperato dal server al cambio di grafico, la corrente a
 let timer = window.setTimeout(null,1);
 
 /************************************************************************************************
- * Recupera le informazioni sul massimo di una determinata misura usando Fetch API
- è ottimista: nessuna gestione dell'errore
+ * Recupera le informazioni sul massimo di una determinata misura
  ***********************************************************************************************/
 async function recuperaMassimo() {
   console.log("chiedo il massimo");
@@ -65,7 +58,7 @@ async function recuperaMassimo() {
 
 
 /************************************************************************************************
- * plotta una serie di dati TODO: l'uso del canvas credo sia da rivedere
+ * plotta una serie di dati
  ***********************************************************************************************/
 function disegnaGrafico(elencoMisure){
   // pulisco la tela		
@@ -116,24 +109,17 @@ function disegnaGrafico(elencoMisure){
 function disegnaNuovoGrafico(){
   clearInterval(timer);
   datoDaVisualizzare = parametro.value;
-  if(cosaVoglio.value=="storico"){
-    indirizzoDati = server+"/statistiche/giornata?giorno="+giorno.value;
-  }else{
-    indirizzoDati = server+"/20";
-  }
-  if(live.checked){
-	timer = window.setInterval(leggiDatiGrafico, 1000);
-  }else{
-	leggiDatiGrafico();	
-  }
+  indirizzoDati = server+"/20";
+  timer = window.setInterval(leggiDatiGrafico, 1000);
+
   // se ho cambiato dato devo richiedere il massimo
   if(massimoDiCosa!=datoDaVisualizzare){
     max = -1;
     massimoDiCosa = datoDaVisualizzare;
     stato.innerText = datoDaVisualizzare;
-	recuperaMassimo();
+    recuperaMassimo();
   }else{
-	stato.innerText = datoDaVisualizzare+" ["+max+"]";  
+    stato.innerText = datoDaVisualizzare+" ["+max+"]";  
   }
 }
 
