@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafici energie rinnovabili</title>
+</head>
+<style>
+    body {
+        background: #E8F5E9;
+    }
+    #grafico{
+        background: white;
+        display: flex;
+        align-items: flex-end; /* barre in basso! */
+    }
+    div{
+        background-color: #76FF03;
+        font-size: 1rem;
+        border:1px solid white;
+    }
+</style>
+<script>
+    async function disegna(){
+        let risposta = await fetch("http://kili.aspix.it:8008/statistiche/giornata?giorno=2025-01-02");
+        let dati = await risposta.json();
+        for(let i = 0; i < dati.length; i++){
+            let barra = document.createElement("div");
+            barra.innerText = dati[i].tensione;
+            barra.style.height = (dati[i].tensione*300+20) + "px";
+            barra.style.width = 3 + "rem";
+            grafico.appendChild(barra);
+        }
+    }
+</script>
+<body onload="disegna()">
+    <h1>Grafico produzione</h1>
+    <section id="grafico"></section>
+</body>
+</html>
