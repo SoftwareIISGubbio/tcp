@@ -15,9 +15,10 @@
         align-items: flex-end; /* barre in basso! */
     }
     div{
-        background-color: #76FF03;
-        font-size: 1rem;
+        background-color: #f8a42d;
+        font-size: 2rem;
         border:1px solid white;
+
     }
 </style>
 <script>
@@ -29,6 +30,8 @@
             barra.innerText = dati[i].tensione;
             barra.style.height = (dati[i].tensione*300+20) + "px";
             barra.style.width = 3 + "rem";
+            // if(i%2==0){barra.style.backgroundColor="red"}else{barra.style.backgroundColor="pink"}
+            // barra.style.backgroundColor = i%2==0 ? "red" : "pink";
             grafico.appendChild(barra);
         }
     }
